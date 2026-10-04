@@ -80,7 +80,7 @@ namespace calibrate {
             + diffDrive.roundTo(diffDrive.wheelCalibration(), 4) + ")")
         diffDrive.emitLine("diffDrive.setTrackWidth("
             + diffDrive.roundTo(diffDrive.trackWidth(), 2) + ")")
-        diffDrive.emitLine("diffDrive.setConfigValue(ConfigField.RotationalSlip, "
+        diffDrive.emitLine("diffDrive.setRotationalSlip("
             + diffDrive.roundTo(diffDrive.rotationalSlip(), 4) + ")")
     }
 }

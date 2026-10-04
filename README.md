@@ -82,7 +82,7 @@ diffDrive.setWheelMultiplier(MotorSide.Left, 1)
 diffDrive.setWheelMultiplier(MotorSide.Right, 1)
 diffDrive.setWheelCalibration(0.7842)
 diffDrive.setTrackWidth(11.14)
-diffDrive.setConfigValue(ConfigField.RotationalSlip, 0.998)
+diffDrive.setRotationalSlip(0.998)
 ```
 
 Both are also run commands, `RUN _caldump` and `RUN _calcode`.
