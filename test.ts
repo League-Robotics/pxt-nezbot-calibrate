@@ -1,3 +1,5 @@
 calibrate.registerPrograms()
 calibrate.dump()
 calibrate.dumpCode()
+calibrate.calibrateWheels(90.2)
+calibrate.calibrateTurn()

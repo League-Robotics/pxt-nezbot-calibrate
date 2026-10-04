@@ -1,7 +1,7 @@
 /**
  * Calibration programs for a Nezha robot driven by DiffDrive.
  */
-//% color="#2E7D32" weight=80 icon="" block="Calibrate"
+//% color="#2E7D32" weight=80 icon="" block="Nezbot Calibrate"
 namespace calibrate {
     let registered: boolean
 

@@ -61,7 +61,17 @@ namespace calibrate {
         return Math.PI * diaMm / 360
     }
 
-    function calibrateWheels(trueCm: number, wheelMm: number) {
+    /**
+     * Measure the wheels: start on clear white before the first line
+     * and the robot follows the stripe to the second line, then keeps
+     * the result and backs up to where it started.
+     * @param trueCm tape-measured distance between the two lines in cm, eg: 90.2
+     * @param wheelMm wheel diameter in mm if you know it, 0 if not, eg: 0
+     */
+    //% block="calibrate wheels over %trueCm cm || with wheel diameter %wheelMm mm"
+    //% expandableArgumentMode="toggle"
+    //% weight=70
+    export function calibrateWheels(trueCm: number, wheelMm: number = 0) {
         const known = wheelMm > 0
         const runCalib = known ? calibOfDiameter(wheelMm) : WHEELS_BASELINE
 

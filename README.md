@@ -2,7 +2,7 @@
 
 A MakeCode extension that measures a Nezha robot's wheels and track, for
 robots driven by the
-[DiffDrive](https://github.com/League-Robotics/pxt-nezha-diffdrive)
+[Nezbot](https://github.com/League-Robotics/pxt-nezha-diffdrive)
 extension.
 
 It needs a micro:bit **V2**, a Nezha brick with two motors and a PlanetX
@@ -34,6 +34,13 @@ running program. Each program is also a run command of the same name.
 `calwheels` takes the distance between the lines in cm and, if you know
 it, the wheel diameter in mm: `RUN calwheels 90.5 0`. `calturn` takes
 the number of edges to time: `RUN calturn 10`.
+
+To run a calibration from your own code instead of the menu:
+
+```typescript
+calibrate.calibrateWheels(90.2)
+calibrate.calibrateTurn()
+```
 
 A calibration that succeeds is used straight away and kept in the
 robot's flash memory, so it is still there after a reset or after a

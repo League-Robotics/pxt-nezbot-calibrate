@@ -55,7 +55,15 @@ namespace calibrate {
             .send()
     }
 
-    function calibrateTurn(edgesWanted: number) {
+    /**
+     * Measure the track: centre the robot on the iron cross and it
+     * spins in place, then keeps the result.
+     * @param edgesWanted sector edges to time on each sensor channel, eg: 10
+     */
+    //% block="calibrate turn || over %edgesWanted edges"
+    //% expandableArgumentMode="toggle"
+    //% weight=60
+    export function calibrateTurn(edgesWanted: number = 10) {
         // A whole number of revolutions, so a centring error cancels.
         const revs = Math.max(1, Math.round((edgesWanted - 2) / 8))
         const edges = 2 + 8 * revs
