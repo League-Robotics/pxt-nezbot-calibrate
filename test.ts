@@ -1,4 +1,6 @@
-calibrate.registerPrograms()
+diffDrive.setupRobot()
+calibrate.setupCalibrations()
+calibrate.setupButtons()
 calibrate.dump()
 calibrate.dumpCode()
 calibrate.calibrateWheels(90.2)

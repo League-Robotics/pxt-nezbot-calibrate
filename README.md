@@ -17,12 +17,16 @@ In MakeCode, open **Extensions** and paste:
 ## Use it
 
 ```typescript
-calibrate.registerPrograms()
+diffDrive.setupRobot()
+calibrate.setupCalibrations()
+calibrate.setupButtons()
 ```
 
-That one call brings the robot up and adds four programs. Press **A** to
-step through them, **B** to run the one shown, and any button to stop a
-running program. Each program is also a run command of the same name.
+`setupCalibrations()` adds four programs as run commands, so the robot
+console or any other sender can start them. `setupButtons()` is
+optional: it also puts them on the buttons. Press **A** to step through
+them, **B** to run the one shown, and any button to stop a running
+program. Leave it out to keep the buttons for your own program.
 
 | Program | Picture | What it does |
 | --- | --- | --- |

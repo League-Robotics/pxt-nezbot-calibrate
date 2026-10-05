@@ -3,38 +3,51 @@
  */
 //% color="#2E7D32" weight=80 icon="" block="Nezbot Calibrate"
 namespace calibrate {
-    let registered: boolean
+    let calibrationsSetUp: boolean
+    let buttonsSetUp: boolean
 
     /**
-     * Bring the robot up and add the calibration programs to the button
-     * menu and the run commands: circle, square, calwheels and calturn.
-     * A steps through the programs, B runs the one shown, and any
-     * button stops a running program.
+     * Add the calibration programs as run commands: circle, square,
+     * calwheels and calturn. The buttons are left alone.
      */
-    //% block="register calibration programs"
+    //% block="setup calibrations"
     //% weight=100
-    export function registerPrograms(): void {
-        if (registered) return
-        registered = true
-        diffDrive.setupRobot()
+    export function setupCalibrations(): void {
+        if (calibrationsSetUp) return
+        calibrationsSetUp = true
 
-        diffDrive.addProgram("circle", SHAPE_CIRCLE, driveCircle)
+        diffDrive.addRunProgram("circle", driveCircle)
         diffDrive.runSignature("circle", "()")
 
-        diffDrive.addProgram("square", SHAPE_SQUARE, driveSquare)
+        diffDrive.addRunProgram("square", driveSquare)
         diffDrive.runSignature("square", "()")
 
-        diffDrive.addProgram("calwheels", SHAPE_OUT_AND_BACK, runCalWheels)
+        diffDrive.addRunProgram("calwheels", runCalWheels)
         diffDrive.runSignature("calwheels", "(cm:number=90.5, wheel:number=0)")
 
-        diffDrive.addProgram("calturn", SHAPE_SPIN, runCalTurn)
+        diffDrive.addRunProgram("calturn", runCalTurn)
         diffDrive.runSignature("calturn", "(edges:number=10)")
 
         diffDrive.onRun("_caldump", function (arg: number) { dump() })
         diffDrive.runSignature("_caldump", "()")
         diffDrive.onRun("_calcode", function (arg: number) { dumpCode() })
         diffDrive.runSignature("_calcode", "()")
+    }
 
+    /**
+     * Put the calibration programs on the buttons: A steps through
+     * them, B runs the one shown, and any button stops a running
+     * program. Takes over the A, B and A+B buttons.
+     */
+    //% block="setup calibration buttons"
+    //% weight=95
+    export function setupButtons(): void {
+        if (buttonsSetUp) return
+        buttonsSetUp = true
+        diffDrive.addMenuProgram("circle", SHAPE_CIRCLE, driveCircle)
+        diffDrive.addMenuProgram("square", SHAPE_SQUARE, driveSquare)
+        diffDrive.addMenuProgram("calwheels", SHAPE_OUT_AND_BACK, runCalWheels)
+        diffDrive.addMenuProgram("calturn", SHAPE_SPIN, runCalTurn)
         diffDrive.emitLine("boot buttons: A=pick program  B=run it")
     }
 
