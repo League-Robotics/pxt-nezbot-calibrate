@@ -1,11 +1,11 @@
 {
     "name": "nezbot-calibrate",
-    "version": "0.20261005.1",
+    "version": "0.20261006.1",
     "description": "Calibration programs for a Nezha robot driven by DiffDrive: measure the wheels and the track on a line sheet, then dump the result as data or as code.",
     "license": "MIT",
     "dependencies": {
         "core": "*",
-        "nezha-diffdrive": "github:League-Robotics/pxt-nezha-diffdrive#v1.20261005.1"
+        "nezha-diffdrive": "github:League-Robotics/pxt-nezha-diffdrive#v1.20261006.1"
     },
     "files": [
         "README.md",
