@@ -1,6 +1,6 @@
 {
     "name": "nezbot-calibrate",
-    "version": "0.20261006.1",
+    "version": "0.20261016.1",
     "description": "Calibration programs for a Nezha robot driven by DiffDrive: measure the wheels and the track on a line sheet, then dump the result as data or as code.",
     "license": "MIT",
     "dependencies": {
