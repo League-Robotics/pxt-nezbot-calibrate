@@ -33,7 +33,7 @@ program. Leave it out to keep the buttons for your own program.
 | `circle` | circle | Drives a 30 cm radius circle, to check a calibration |
 | `square` | square | Drives a 50 cm square, to check a calibration |
 | `calwheels` | out and back | Drives between two lines a measured distance apart and works out the wheel size |
-| `calturn` | spin | Spins on the iron cross and works out the track width and slip |
+| `calturn` | spin | Spins on the iron cross and works out the track width and slip; each run spins the opposite way from the last |
 
 `calwheels` takes the distance between the lines in cm and, if you know
 it, the wheel diameter in mm: `RUN calwheels 90.5 0`. `calturn` takes

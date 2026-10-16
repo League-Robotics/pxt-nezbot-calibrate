@@ -11,6 +11,7 @@ namespace calibrate {
     const TURN_MAX_SECS = 120
     const TURN_SETTLE = 300        // ms of stillness before the spin
 
+    let turnDir = 1                // +1 spins left, -1 right; alternates each run
     let edges0: number[] = []
     let edges1: number[] = []
     let edges2: number[] = []
@@ -57,7 +58,8 @@ namespace calibrate {
 
     /**
      * Measure the track: centre the robot on the iron cross and it
-     * spins in place, then keeps the result.
+     * spins in place, then keeps the result. Each run spins the
+     * opposite way from the last, so two runs measure both directions.
      * @param edgesWanted sector edges to time on each sensor channel, eg: 10
      */
     //% block="calibrate turn || over %edgesWanted edges"
@@ -76,9 +78,12 @@ namespace calibrate {
         diffDrive.setTrackWidth(TURN_TRACK)
         diffDrive.setConfigValue(ConfigField.RotationalSlip, TURN_SLIP)
         const bAnchor = TURN_TRACK / TURN_SLIP
+        const dir = turnDir
+        turnDir = -turnDir
         diffDrive.emitLine("CALTURN:begin edges=" + edges + " sector=" + TURN_SECTOR
             + "deg anchor b=" + diffDrive.roundTo(bAnchor, 3) + "cm (track " + TURN_TRACK
-            + " slip " + TURN_SLIP + ") spin=" + TURN_SPIN + "deg/s")
+            + " slip " + TURN_SLIP + ") spin=" + TURN_SPIN + "deg/s turn="
+            + (dir > 0 ? "left" : "right"))
 
         edges0 = []; edges1 = []; edges2 = []; edges3 = []
 
@@ -92,11 +97,11 @@ namespace calibrate {
         diffDrive.emitLine("CALTURN:spin start bar=" + barText(last)
             + " wheel=" + diffDrive.roundTo(wheel, 2) + "cm/s")
 
-        diffDrive.setWheelSpeeds(-wheel, wheel)
+        diffDrive.setWheelSpeeds(-dir * wheel, dir * wheel)
         let cancelled = false
         while (diffDrive.driveTick()) {
             if (diffDrive.cancelled()) { cancelled = true; break }
-            const h = diffDrive.heading()
+            const h = diffDrive.heading() * dir
             const bits = lineBits()
             if (bits != last) {
                 for (let i = 0; i < 4; i++) {
@@ -119,7 +124,7 @@ namespace calibrate {
             }
             if (Math.abs(h) >= TURN_MAX_SWEEP) break
             if (control.millis() - startedAt > TURN_MAX_SECS * 1000) break
-            diffDrive.setWheelSpeeds(-wheel, wheel)
+            diffDrive.setWheelSpeeds(-dir * wheel, dir * wheel)
         }
         diffDrive.stop()
 
