@@ -1,7 +1,7 @@
 // Wheel calibration: drive between two lines a tape-measured distance apart,
 // straddling the edge of the centre stripe, and compare with the odometry.
 namespace calibrate {
-    const WHEELS_BASELINE = 0.7878  // mm/deg, the engine's default
+    const WHEELS_BASELINE = 0.7878  // mm/deg, used when the current calibration is implausible
     const WHEELS_TRUE_CM = 90.2     // tape-measured, start line to finish line
     const WHEELS_STRIPE_W = 1.68    // cm, centre stripe width
     const WHEELS_SPEED = 8          // cm/s
@@ -73,7 +73,9 @@ namespace calibrate {
     //% weight=70
     export function calibrateWheels(trueCm: number, wheelMm: number = 0) {
         const known = wheelMm > 0
-        const runCalib = known ? calibOfDiameter(wheelMm) : WHEELS_BASELINE
+        const current = diffDrive.wheelCalibration()
+        const plausible = current >= calibOfDiameter(WHEELS_DIA_MIN) && current <= calibOfDiameter(WHEELS_DIA_MAX)
+        const runCalib = known ? calibOfDiameter(wheelMm) : plausible ? current : WHEELS_BASELINE
 
         const spanLo = known ? 1 - WHEELS_TOL_FRAC : runCalib / calibOfDiameter(WHEELS_DIA_MAX)
         const spanHi = known ? 1 + WHEELS_TOL_FRAC : runCalib / calibOfDiameter(WHEELS_DIA_MIN)
