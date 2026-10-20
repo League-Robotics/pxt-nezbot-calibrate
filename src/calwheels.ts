@@ -13,6 +13,10 @@ namespace calibrate {
     const WHEELS_ACQ_STEER = 1.4    // cm/s differential while searching
     const WHEELS_ACQ_MAX = 150      // ticks searching before giving up
     const WHEELS_BLIND_MAX = 40     // blind ticks in a row before stopping
+    // The Cutebot Pro turns sluggishly, so it steers harder and waits longer
+    // to get a lost stripe back.
+    const CUTEBOT_BLIND_ERR = 2.0
+    const CUTEBOT_BLIND_MAX = 60
     const WHEELS_MID_MAX = 40       // all-dark ticks in a row before stopping
     const WHEELS_PHASE2_CLEAR = 4   // cm past the start line
     const WHEELS_TOL_FRAC = 0.1     // allowed error against a declared wheel
@@ -73,6 +77,9 @@ namespace calibrate {
     //% weight=70
     export function calibrateWheels(trueCm: number, wheelMm: number = 0) {
         const known = wheelMm > 0
+        const cutebot = diffDrive.boardKind() == 2
+        const blindErr = cutebot ? CUTEBOT_BLIND_ERR : WHEELS_BLIND_ERR
+        const blindMax = cutebot ? CUTEBOT_BLIND_MAX : WHEELS_BLIND_MAX
         const current = diffDrive.wheelCalibration()
         const plausible = current >= calibOfDiameter(WHEELS_DIA_MIN) && current <= calibOfDiameter(WHEELS_DIA_MAX)
         const runCalib = known ? calibOfDiameter(wheelMm) : plausible ? current : WHEELS_BASELINE
@@ -109,6 +116,7 @@ namespace calibrate {
         let maxAbs = 0
         let crossings = 0
         let lastSign = 0
+        let lastSeenErr = 0
         let sumDiff = 0
         let blindTicks = 0
         let blindRun = 0
@@ -187,16 +195,19 @@ namespace calibrate {
                         continue
                     }
                     blindRun++
-                    if (blindRun >= WHEELS_BLIND_MAX) {
+                    if (blindRun >= blindMax) {
                         bailed = "lost the stripe for " + blindRun + " ticks at "
                             + diffDrive.roundTo(x - xA, 1) + "cm -- stopping rather than arcing away"
                         break
                     }
-                    err = lastSign >= 0 ? WHEELS_BLIND_ERR : -WHEELS_BLIND_ERR
+                    // On target only the right inner channel sees tape, so a
+                    // stripe that vanishes without lighting the left one went right.
+                    err = lastSeenErr > 0 ? blindErr : -blindErr
                 } else {
                     acquired = true
                     blindRun = 0
                     err = edge - stripeTarget()
+                    lastSeenErr = err
                 }
 
                 nTicks++
@@ -339,6 +350,7 @@ namespace calibrate {
         let maxAbs = 0
         let crossings = 0
         let lastSign = 0
+        let lastSeenErr = 0
         let trk = 0
         const startedAt = control.millis()
 
@@ -378,10 +390,11 @@ namespace calibrate {
                         basic.showIcon(IconNames.No)
                         return
                     }
-                    err = lastSign >= 0 ? WHEELS_BLIND_ERR : -WHEELS_BLIND_ERR
+                    err = lastSeenErr > 0 ? WHEELS_BLIND_ERR : -WHEELS_BLIND_ERR
                 } else {
                     blindRun = 0
                     err = edge - stripeTarget()
+                    lastSeenErr = err
                 }
 
                 nTicks++
