@@ -6,11 +6,12 @@ namespace calibrate {
     const TURN_SLIP = 0.952        // anchor slip
     const TURN_SECTOR = 45         // deg between sector edges
     const TURN_SPIN = 70           // deg/s; slower and the reversing wheel stalls
+    const CUTEBOT_TURN_SPIN = 115  // deg/s; the Cutebot Pro stick-slips to a stop at 70
     const TURN_EDGES = 10          // edges per channel; the first gap is discarded
     const TURN_MAX_SWEEP = 2000    // deg
     const TURN_MAX_SECS = 120
     const TURN_STUCK_DEG = 2       // deg of heading that counts as still turning
-    const TURN_STUCK_MS = 1500     // ms without that much turn before giving up
+    const TURN_STUCK_MS = 3000     // ms without that much turn before giving up
     const TURN_SETTLE = 300        // ms of stillness before the spin
 
     let turnDir = 1                // +1 spins left, -1 right; alternates each run
@@ -75,6 +76,7 @@ namespace calibrate {
             diffDrive.emitLine("CALTURN:edges " + edgesWanted + " -> " + edges
                 + " (the window must be a whole number of revolutions: 8n+2)")
         }
+        const spin = diffDrive.boardKind() == 2 ? CUTEBOT_TURN_SPIN : TURN_SPIN
         const trackWidth = diffDrive.trackWidth()
         const slip = diffDrive.rotationalSlip()
         diffDrive.setTrackWidth(TURN_TRACK)
@@ -84,12 +86,12 @@ namespace calibrate {
         turnDir = -turnDir
         diffDrive.emitLine("CALTURN:begin edges=" + edges + " sector=" + TURN_SECTOR
             + "deg anchor b=" + diffDrive.roundTo(bAnchor, 3) + "cm (track " + TURN_TRACK
-            + " slip " + TURN_SLIP + ") spin=" + TURN_SPIN + "deg/s turn="
+            + " slip " + TURN_SLIP + ") spin=" + spin + "deg/s turn="
             + (dir > 0 ? "left" : "right"))
 
         edges0 = []; edges1 = []; edges2 = []; edges3 = []
 
-        const wheel = TURN_SPIN * Math.PI / 180 * bAnchor / 2
+        const wheel = spin * Math.PI / 180 * bAnchor / 2
 
         basic.pause(TURN_SETTLE)
         diffDrive.resetPose()
@@ -219,7 +221,7 @@ namespace calibrate {
             .num("ch", chUsable, 0)
             .num("gap", meanGap, 3)
             .num("sector", TURN_SECTOR, 0)
-            .num("spin", TURN_SPIN, 0)
+            .num("spin", spin, 0)
             .num("wheel", wheel, 2)
             .send()
         diffDrive.saveTurnCalibration(trackWidth, trackWidth / bTrue)
