@@ -12,6 +12,9 @@ namespace calibrate {
     const TURN_MAX_SECS = 120
     const TURN_STUCK_DEG = 2       // deg of heading that counts as still turning
     const TURN_STUCK_MS = 3000     // ms without that much turn before giving up
+    const TURN_SLIP_MIN = 0.8      // a slip outside these means the wheels spun
+    const TURN_SLIP_MAX = 1.25     // or the robot was held, not a measurement
+    const TURN_PAIR_TOL = 0.1      // a left/right pair further apart is not averaged
     const TURN_SETTLE = 300        // ms of stillness before the spin
 
     const LAST_SLIP_KEY = "#ct.last"   // slip measured by the previous run
@@ -228,9 +231,19 @@ namespace calibrate {
         // Left and right spins disagree by a few percent, so keep the mean
         // of this run and the previous one when that one spun the other way.
         const runSlip = trackWidth / bTrue
+        if (runSlip < TURN_SLIP_MIN || runSlip > TURN_SLIP_MAX) {
+            diffDrive.report("calturn.fail")
+                .str("why", "slip " + diffDrive.roundTo(runSlip, 3) + " is not plausible; the wheels slipped or the robot was held -- nothing stored")
+                .send()
+            reportTurnGeometry(0)
+            diffDrive.flushReports()
+            basic.showIcon(IconNames.No)
+            return
+        }
         let slipToStore = runSlip
         if (settings.exists(LAST_SLIP_KEY) && lastDir == -dir) {
-            slipToStore = (runSlip + settings.readNumber(LAST_SLIP_KEY)) / 2
+            const last = settings.readNumber(LAST_SLIP_KEY)
+            if (Math.abs(runSlip - last) <= TURN_PAIR_TOL * last) slipToStore = (runSlip + last) / 2
         }
         settings.writeNumber(LAST_SLIP_KEY, runSlip)
         settings.writeNumber(LAST_DIR_KEY, dir)
