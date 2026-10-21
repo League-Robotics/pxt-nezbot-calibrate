@@ -41,6 +41,11 @@ namespace calibrate {
     const WHEELS_BACK_IMAX = 60
     const WHEELS_BACK_MAX_STEER = 2.5
     const WHEELS_BACK_BLIND_MAX = 25  // blind ticks in a row before stopping
+    // The Cutebot Pro cannot follow the stripe in reverse (with the bar
+    // trailing, its sluggish steering oscillates off it), and pivoting on
+    // the tape catches. It drives straight well, so it comes home by
+    // undoing the forward run's heading drift and reversing the distance.
+    const CUTEBOT_HOME_TURN_MIN = 3  // deg of drift worth a corrective turn
 
     export function barText(bits: number): string {
         let text = ""
@@ -342,6 +347,26 @@ namespace calibrate {
     }
 
     function driveHome(minCm: number) {
+        if (diffDrive.boardKind() == 2) {
+            const back = Math.abs(diffDrive.poseX())
+            const drift = diffDrive.heading()
+            diffDrive.emitLine("CALWHEELS:home straight back " + diffDrive.roundTo(back, 1)
+                + "cm after undoing " + diffDrive.roundTo(drift, 1) + "deg")
+            if (Math.abs(drift) >= CUTEBOT_HOME_TURN_MIN && !diffDrive.moveLeg(0, -drift)) {
+                diffDrive.emitLine("CALWHEELS:home fail could not undo the heading drift")
+                basic.showIcon(IconNames.No)
+                return
+            }
+            if (!diffDrive.moveLeg(-back, 0)) {
+                diffDrive.emitLine("CALWHEELS:home fail did not get back")
+                basic.showIcon(IconNames.No)
+                return
+            }
+            diffDrive.emitLine("CALWHEELS:home back " + diffDrive.roundTo(back, 1) + "cm")
+            basic.showIcon(IconNames.Yes)
+            return
+        }
+
         diffDrive.emitLine("CALWHEELS:home reverse PID kp=" + WHEELS_BACK_KP + " kh=" + WHEELS_BACK_KH
             + " ki=" + WHEELS_BACK_KI + " speed=" + WHEELS_BACK_SPEED + "cm/s")
         diffDrive.resetPose()
