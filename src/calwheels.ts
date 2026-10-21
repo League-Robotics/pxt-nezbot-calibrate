@@ -20,6 +20,7 @@ namespace calibrate {
     const WHEELS_MID_MAX = 40       // all-dark ticks in a row before stopping
     const WHEELS_PHASE2_CLEAR = 4   // cm past the start line
     const WHEELS_TOL_FRAC = 0.1     // allowed error against a declared wheel
+    const WHEELS_STORED_TOL_FRAC = 0.2  // allowed change from a wheel already in flash
     const WHEELS_DIA_MIN = 40       // mm
     const WHEELS_DIA_MAX = 120      // mm
     const WHEELS_HUNT_CM = 25       // cm to find the start line
@@ -84,8 +85,13 @@ namespace calibrate {
         const plausible = current >= calibOfDiameter(WHEELS_DIA_MIN) && current <= calibOfDiameter(WHEELS_DIA_MAX)
         const runCalib = known ? calibOfDiameter(wheelMm) : plausible ? current : WHEELS_BASELINE
 
-        const spanLo = known ? 1 - WHEELS_TOL_FRAC : runCalib / calibOfDiameter(WHEELS_DIA_MAX)
-        const spanHi = known ? 1 + WHEELS_TOL_FRAC : runCalib / calibOfDiameter(WHEELS_DIA_MIN)
+        // A wheel already in flash bounds the run, so a dark patch crossed
+        // early cannot pass for the finish line and store a wild value.
+        const stored = !known && diffDrive.storedWheelCalibration() > 0
+        const spanLo = known ? 1 - WHEELS_TOL_FRAC
+            : stored ? 1 - WHEELS_STORED_TOL_FRAC : runCalib / calibOfDiameter(WHEELS_DIA_MAX)
+        const spanHi = known ? 1 + WHEELS_TOL_FRAC
+            : stored ? 1 + WHEELS_STORED_TOL_FRAC : runCalib / calibOfDiameter(WHEELS_DIA_MIN)
 
         diffDrive.setWheelCalibration(runCalib)
         diffDrive.emitLine("CALWHEELS:begin true=" + trueCm + "cm scale=" + diffDrive.roundTo(runCalib, 4)
