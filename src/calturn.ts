@@ -9,6 +9,8 @@ namespace calibrate {
     const TURN_EDGES = 10          // edges per channel; the first gap is discarded
     const TURN_MAX_SWEEP = 2000    // deg
     const TURN_MAX_SECS = 120
+    const TURN_STUCK_DEG = 2       // deg of heading that counts as still turning
+    const TURN_STUCK_MS = 1500     // ms without that much turn before giving up
     const TURN_SETTLE = 300        // ms of stillness before the spin
 
     let turnDir = 1                // +1 spins left, -1 right; alternates each run
@@ -99,6 +101,9 @@ namespace calibrate {
 
         diffDrive.setWheelSpeeds(-dir * wheel, dir * wheel)
         let cancelled = false
+        let stuck = false
+        let progressH = 0
+        let progressAt = control.millis()
         while (diffDrive.driveTick()) {
             if (diffDrive.cancelled()) { cancelled = true; break }
             const h = diffDrive.heading() * dir
@@ -122,6 +127,13 @@ namespace calibrate {
                 }
                 if (done == 4) break
             }
+            if (Math.abs(h - progressH) >= TURN_STUCK_DEG) {
+                progressH = h
+                progressAt = control.millis()
+            } else if (control.millis() - progressAt > TURN_STUCK_MS) {
+                stuck = true
+                break
+            }
             if (Math.abs(h) >= TURN_MAX_SWEEP) break
             if (control.millis() - startedAt > TURN_MAX_SECS * 1000) break
             diffDrive.setWheelSpeeds(-dir * wheel, dir * wheel)
@@ -133,6 +145,16 @@ namespace calibrate {
 
         if (cancelled) {
             diffDrive.reportStopped("calturn")
+            return
+        }
+        if (stuck || done < 4) {
+            diffDrive.report("calturn.fail")
+                .str("why", stuck ? "stopped turning; nothing stored" : "spin ended before every channel had its edges; nothing stored")
+                .num("h", diffDrive.heading() * dir, 1)
+                .send()
+            reportTurnGeometry(0)
+            diffDrive.flushReports()
+            basic.showIcon(IconNames.No)
             return
         }
 
