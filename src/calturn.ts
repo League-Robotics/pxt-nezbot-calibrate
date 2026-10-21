@@ -14,7 +14,8 @@ namespace calibrate {
     const TURN_STUCK_MS = 3000     // ms without that much turn before giving up
     const TURN_SETTLE = 300        // ms of stillness before the spin
 
-    let turnDir = 1                // +1 spins left, -1 right; alternates each run
+    const LAST_SLIP_KEY = "#ct.last"   // slip measured by the previous run
+    const LAST_DIR_KEY = "#ct.ldir"    // its spin direction, +1 left, -1 right
     let edges0: number[] = []
     let edges1: number[] = []
     let edges2: number[] = []
@@ -82,8 +83,8 @@ namespace calibrate {
         diffDrive.setTrackWidth(TURN_TRACK)
         diffDrive.setConfigValue(ConfigField.RotationalSlip, TURN_SLIP)
         const bAnchor = TURN_TRACK / TURN_SLIP
-        const dir = turnDir
-        turnDir = -turnDir
+        const lastDir = settings.exists(LAST_DIR_KEY) ? settings.readNumber(LAST_DIR_KEY) : -1
+        const dir = lastDir > 0 ? -1 : 1
         diffDrive.emitLine("CALTURN:begin edges=" + edges + " sector=" + TURN_SECTOR
             + "deg anchor b=" + diffDrive.roundTo(bAnchor, 3) + "cm (track " + TURN_TRACK
             + " slip " + TURN_SLIP + ") spin=" + spin + "deg/s turn="
@@ -224,7 +225,21 @@ namespace calibrate {
             .num("spin", spin, 0)
             .num("wheel", wheel, 2)
             .send()
-        diffDrive.saveTurnCalibration(trackWidth, trackWidth / bTrue)
+        // Left and right spins disagree by a few percent, so keep the mean
+        // of this run and the previous one when that one spun the other way.
+        const runSlip = trackWidth / bTrue
+        let slipToStore = runSlip
+        if (settings.exists(LAST_SLIP_KEY) && lastDir == -dir) {
+            slipToStore = (runSlip + settings.readNumber(LAST_SLIP_KEY)) / 2
+        }
+        settings.writeNumber(LAST_SLIP_KEY, runSlip)
+        settings.writeNumber(LAST_DIR_KEY, dir)
+        diffDrive.report("calturn.stored")
+            .num("run", runSlip, 4)
+            .num("slip", slipToStore, 4)
+            .str("pair", slipToStore == runSlip ? "no" : "yes")
+            .send()
+        diffDrive.saveTurnCalibration(trackWidth, slipToStore)
         reportTurnGeometry(1)
         diffDrive.flushReports()
         basic.showIcon(IconNames.Yes)
